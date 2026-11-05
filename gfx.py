@@ -75,8 +75,8 @@ def truecolor_supported():
     forced = os.environ.get('ARCADE_COLOR')
     if forced:
         return forced != '256'
-    if os.environ.get('COLORTERM', '').lower() in ('truecolor', '24bit'):
-        return True
+    if os.name == 'nt' or os.environ.get('COLORTERM', '').lower() in ('truecolor', '24bit'):
+        return True  # le console di Windows 10 e successivi gestiscono i 24 bit
     if os.environ.get('TERM_PROGRAM') == 'Apple_Terminal':
         # Terminal.app gestisce i 24 bit da macOS 26 (build 460 in poi)
         try:

@@ -1,0 +1,2 @@
+numpy
+sounddevice; sys_platform != "darwin"

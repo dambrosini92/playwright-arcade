@@ -7,7 +7,7 @@
 **I TUOI TEST E2E SONO BOSS. ABBATTILI.**
 
 ![1 PLAYER](https://img.shields.io/badge/PLAYER-1-ff46be?style=for-the-badge)
-![macOS](https://img.shields.io/badge/CABINATO-macOS-46e1ff?style=for-the-badge)
+![macOS, Linux, Windows](https://img.shields.io/badge/CABINATO-macOS_·_Linux_·_Windows-46e1ff?style=for-the-badge)
 ![Python](https://img.shields.io/badge/CPU-Python_3.9+-ffd650?style=for-the-badge)
 ![Terminale](https://img.shields.io/badge/SCHERMO-terminale-5aff8c?style=for-the-badge)
 
@@ -23,17 +23,33 @@ Un launcher di test Playwright a forma di sparatutto da terminale. Grafica a pix
 git clone https://github.com/dambrosini92/playwright-arcade.git
 ```
 
+### macOS e Linux
+
 ```bash
 cd playwright-arcade
 ```
 
 ```bash
-/usr/bin/python3 -m pip install --user numpy
+python3 -m pip install --user -r requirements.txt
 ```
 
 ```bash
 ./arcade --demo
 ```
+
+Su macOS usa `/usr/bin/python3` per l'installazione: è quello che avvia il gioco. Su Linux serve anche PortAudio, per esempio `sudo apt install libportaudio2`.
+
+### Windows
+
+Da Windows Terminal:
+
+```bat
+cd playwright-arcade
+py -3 -m pip install -r requirements.txt
+arcade.bat --demo
+```
+
+> **BETA:** su macOS il gioco è provato a fondo. Linux è provato senza audio e Windows non è ancora mai stato giocato su una macchina vera. Se qualcosa si rompe, apri una issue.
 
 La demo non tocca nessun progetto: è una suite finta con vittorie, errori, crash e test velocissimi. Serve una finestra di almeno 80×24, ma il gioco rende meglio da 120×40 in su.
 
@@ -105,7 +121,7 @@ Per leggere l'elenco senza avviare nulla:
 ./arcade --audio-test
 ```
 
-Fa suonare il motore vero. Un guasto appare in basso a destra e il motivo finisce in `audio.log`.
+Fa suonare il motore vero (su Windows: `arcade.bat --audio-test`). Un guasto appare in basso a destra e il motivo finisce in `audio.log`.
 
 ## 🔧 Dentro il cabinato
 
@@ -114,7 +130,8 @@ Fa suonare il motore vero. Un guasto appare in basso a destra e il motivo finisc
 | `core.py` | Scoperta dei test e comandi |
 | `game.py` | Scene, battaglia e lettura delle righe dei reporter |
 | `gfx.py` | Grafica a pixel nel terminale, a 24 bit oppure 256 colori (`ARCADE_COLOR=256` per forzarli) |
-| `audio_engine.py` | Mixer in tempo reale su CoreAudio, in un processo a parte |
+| `audio_engine.py` | Mixer in tempo reale in un processo a parte: CoreAudio su macOS, `sounddevice` altrove |
+| `sysio.py` | Ciò che cambia tra i sistemi: tastiera, console e processi |
 | `tools/make_audio.py` | Sintetizza musica ed effetti in `assets/` |
 | `projects.example.py` | Modello per `local/projects.py` |
 

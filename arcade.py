@@ -30,7 +30,7 @@ def main():
     try:
         import game
     except ImportError as e:
-        print('Manca una dipendenza (%s). Installa numpy con: /usr/bin/python3 -m pip install --user numpy' % e,
+        print('Manca una dipendenza (%s). Installa con: %s -m pip install --user -r requirements.txt' % (e, sys.executable),
               file=sys.stderr)
         return 1
     projects = PROJECTS + [DEMO] if args.demo or not PROJECTS else PROJECTS

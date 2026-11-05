@@ -3,11 +3,11 @@
 import json
 import os
 import re
-import signal
 import subprocess
 import sys
-import time
 from pathlib import Path
+
+from sysio import node_bin, stop_group  # noqa: F401  stop_group serve anche a game.py e ai progetti locali
 
 try:  # i progetti propri stanno in local/projects.py, ignorato da git: vedi projects.example.py
     from local import projects as local
@@ -58,7 +58,7 @@ def past_results(name, root):
     path = report_path(name, root)
     try:
         stamp = path.stat().st_mtime
-        rows = json.loads(path.read_text())
+        rows = json.loads(path.read_text(encoding='utf-8'))
     except (AttributeError, OSError, ValueError):
         return None, []
     out = []
@@ -93,7 +93,8 @@ def project_ready(name, root):
 
 
 def read_json(cmd, cwd, env=None):
-    result = subprocess.run(cmd, cwd=str(cwd), capture_output=True, text=True, timeout=30, env=env)
+    result = subprocess.run(cmd, cwd=str(cwd), capture_output=True, text=True, encoding='utf-8',
+                            errors='replace', timeout=30, env=env)
     if result.returncode:
         raise RuntimeError((result.stderr or result.stdout or 'Errore di lettura dei test')[:1500])
     return json.loads(result.stdout)
@@ -103,7 +104,7 @@ def playwright_list(root, env=None, prefix=''):
     config = discover_config(root)
     if not config:
         return [], 'Suite Playwright non ancora configurata.'
-    executable = config.parent / 'node_modules/.bin/playwright'
+    executable = node_bin(config.parent, 'playwright')
     if not executable.exists():
         return [], 'Configurazione trovata, dipendenze Playwright mancanti: ' + str(config.parent)
     payload = read_json([str(executable), 'test', '--list', '--reporter=json'], config.parent, env)
@@ -111,7 +112,7 @@ def playwright_list(root, env=None, prefix=''):
 
     def visit(suite):
         for spec in suite.get('specs', []):
-            items.append((spec['title'], prefix + spec['file'] + ':' + str(spec['line'])))
+            items.append((spec['title'], prefix + spec['file'].replace('\\', '/') + ':' + str(spec['line'])))
         for child in suite.get('suites', []):
             visit(child)
     for suite in payload.get('suites', []):
@@ -169,26 +170,10 @@ def level_rows(name, level):
     return rows
 
 
-def stop_group(proc):
-    if not proc:
-        return
-    # Signal the group even when its original parent has already exited.
-    for sig, delay in ((signal.SIGINT, 0.6), (signal.SIGTERM, 0.6), (signal.SIGKILL, 0)):
-        try:
-            os.killpg(proc.pid, sig)
-        except (ProcessLookupError, PermissionError):
-            break
-        if delay:
-            time.sleep(delay)
-    try:
-        proc.wait(timeout=1)
-    except subprocess.TimeoutExpired:
-        pass
-
-
 def command(name, root, selected, group=False):
     env = os.environ.copy()
     if name == 'DEMO':
+        env['PYTHONUTF8'] = '1'  # su Windows la suite finta stamperebbe le emoji in cp1252
         return [sys.executable, '-u', str(root / 'fake_suite.py'), selected], env, root
     custom = hook('command', name, root, selected, group)
     if custom:
@@ -196,4 +181,4 @@ def command(name, root, selected, group=False):
     config = discover_config(root)
     if not config:
         raise RuntimeError('Configurazione Playwright non trovata.')
-    return [str(config.parent / 'node_modules/.bin/playwright'), 'test', selected, '--headed'], env, config.parent
+    return [str(node_bin(config.parent, 'playwright')), 'test', selected, '--headed'], env, config.parent

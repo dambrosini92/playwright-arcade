@@ -5,20 +5,18 @@ import os
 import queue
 import random
 import re
-import select
 import signal
 import subprocess
 import sys
-import termios
 import threading
 import time
-import tty
 from pathlib import Path
 
 import numpy as np
 
 from core import (ANSI, BRIEFINGS, HERE, PLANETS as LOCAL_PLANETS, build_levels, command, discover, hook, level_rows,
                   merge_past, past_results, project_ready, stop_group)
+from sysio import SPAWN, read_input, restore_terminal, setup_terminal
 from gfx import Planet, Screen, Stars, creature, hsv, mix, safe_text, sprite, sunset
 
 FPS = 24
@@ -205,7 +203,7 @@ class Game:
     @staticmethod
     def load_save():
         try:
-            data = json.loads(SAVE.read_text())
+            data = json.loads(SAVE.read_text(encoding='utf-8'))
             return data if isinstance(data, dict) else {}
         except (OSError, ValueError):
             return {}
@@ -213,7 +211,7 @@ class Game:
     def write_save(self):
         try:
             tmp = SAVE.with_suffix('.tmp')
-            tmp.write_text(json.dumps(self.save, indent=1, ensure_ascii=False))
+            tmp.write_text(json.dumps(self.save, indent=1, ensure_ascii=False), encoding='utf-8')
             os.replace(tmp, SAVE)
         except OSError:
             pass
@@ -633,8 +631,8 @@ class Game:
                 return
             cmd, env, cwd = command(name, root, selected, selected in self.groups)
             proc = subprocess.Popen(cmd, cwd=str(cwd), env=env, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
-                                    stderr=subprocess.STDOUT, text=True, errors='replace', bufsize=1,
-                                    start_new_session=True)
+                                    stderr=subprocess.STDOUT, text=True, encoding='utf-8', errors='replace', bufsize=1,
+                                    **SPAWN)
             self.proc = proc
             if self.abort:  # Esc premuto proprio mentre il processo partiva
                 stop_group(proc)
@@ -1338,10 +1336,10 @@ class Game:
     # --- ciclo principale -----------------------------------------------------
     def read_keys(self, wait):
         keys = []
-        ready, _, _ = select.select([0], [], [], max(0., wait))
-        if not ready:
+        data = read_input(wait)
+        if not data:
             return keys
-        data = self.pending + os.read(0, 256)
+        data = self.pending + data
         self.pending = b''
         table = ((b'\x1b[A', 'UP'), (b'\x1b[B', 'DOWN'), (b'\x1b[C', 'RIGHT'), (b'\x1b[D', 'LEFT'),
                  (b'\x1bOA', 'UP'), (b'\x1bOB', 'DOWN'), (b'\x1bOC', 'RIGHT'), (b'\x1bOD', 'LEFT'),
@@ -1425,20 +1423,16 @@ class Game:
 
 
 def run(projects):
-    fd = 0
-    saved = termios.tcgetattr(fd)
+    saved = setup_terminal()
     game = None
 
     def terminate(*_):
         raise KeyboardInterrupt
 
     signal.signal(signal.SIGTERM, terminate)
-    signal.signal(signal.SIGHUP, terminate)
+    if hasattr(signal, 'SIGHUP'):  # non esiste su Windows
+        signal.signal(signal.SIGHUP, terminate)
     try:
-        tty.setcbreak(fd)
-        attrs = termios.tcgetattr(fd)
-        attrs[6][termios.VSUSP] = b'\0'  # niente Ctrl+Z: lascerebbe il terminale nello schermo alternativo
-        termios.tcsetattr(fd, termios.TCSANOW, attrs)
         game = Game(projects)
         game.s.enter()
         game.loop()
@@ -1448,7 +1442,7 @@ def run(projects):
         if game:
             game.s.leave()
             game.close()
-        termios.tcsetattr(fd, termios.TCSADRAIN, saved)
+        restore_terminal(saved)
     return 0
 
 
@@ -1466,5 +1460,5 @@ def audio_test():
             print('Motore audio caduto: vedi audio.log')
             return 1
     sound.close()
-    print('Motore audio OK. Se non hai sentito nulla, controlla volume e uscita audio del Mac.')
+    print('Motore audio OK. Se non hai sentito nulla, controlla volume e uscita audio del computer.')
     return 0

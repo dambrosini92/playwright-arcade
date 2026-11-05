@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-"""Mixer audio in tempo reale su CoreAudio. Gira in un processo a parte.
+"""Mixer audio in tempo reale. Gira in un processo a parte.
+
+Su macOS esce da CoreAudio, altrove da sounddevice (ARCADE_AUDIO=sounddevice per forzarlo).
 
 Comandi su stdin, uno per riga:
   music <nome> | music -   cambia brano con dissolvenza (o silenzio)
@@ -9,6 +11,7 @@ Comandi su stdin, uno per riga:
 Si chiude da solo quando stdin si chiude, cioè quando il gioco termina.
 """
 import ctypes as C
+import os
 import signal
 import sys
 import threading
@@ -127,8 +130,27 @@ class Mixer:
                 bank.append([data, 0, volume])
 
 
-def main():
-    signal.signal(signal.SIGINT, signal.SIG_IGN)
+def read_commands(mixer):
+    for line in sys.stdin:
+        try:
+            mixer.command(line)
+        except (OSError, ValueError, IndexError, EOFError, wave.Error):
+            pass
+
+
+def portable():
+    import sounddevice as sd
+    mixer = Mixer()
+
+    def fill(out, _frames, _time, _status):
+        out[:] = mixer.mix()
+
+    with sd.OutputStream(samplerate=RATE, blocksize=FRAMES, channels=2, dtype='float32', latency='low', callback=fill):
+        read_commands(mixer)
+    return 0
+
+
+def coreaudio():
     at = C.CDLL('/System/Library/Frameworks/AudioToolbox.framework/AudioToolbox')
     at.AudioQueueNewOutput.argtypes = [C.POINTER(ASBD), CALLBACK, C.c_void_p, C.c_void_p, C.c_void_p, C.c_uint32,
                                        C.POINTER(C.c_void_p)]
@@ -159,13 +181,15 @@ def main():
         fill(None, queue.value, buf)
     if at.AudioQueueStart(queue, None):
         return 1
-    for line in sys.stdin:
-        try:
-            mixer.command(line)
-        except (OSError, ValueError, IndexError, EOFError, wave.Error):
-            pass
+    read_commands(mixer)
     at.AudioQueueDispose(queue, True)
     return 0
+
+
+def main():
+    signal.signal(signal.SIGINT, signal.SIG_IGN)
+    backend = os.environ.get('ARCADE_AUDIO') or ('coreaudio' if sys.platform == 'darwin' else 'sounddevice')
+    return coreaudio() if backend == 'coreaudio' else portable()
 
 
 if __name__ == '__main__':

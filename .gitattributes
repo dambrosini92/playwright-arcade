@@ -1,0 +1,6 @@
+* text=auto
+*.bat text eol=crlf
+arcade text eol=lf
+*.wav binary
+*.gif binary
+*.png binary
