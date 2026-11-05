@@ -1,0 +1,11 @@
+# Progetti, percorsi e note personali
+local/
+archive/
+
+# Stato del gioco
+save.json
+audio.log
+
+__pycache__/
+*.pyc
+.DS_Store
