@@ -1,40 +1,89 @@
-# Playwright Arcade
+<div align="center">
 
-Launcher di test Playwright a forma di videogioco da terminale, per macOS. Ogni test è un boss: musica, animazioni e suoni seguono gli esiti reali.
+<img src="docs/gameplay.gif" alt="Una partita a Playwright Arcade: titolo, boss, vittorie, sconfitte e game over" width="720">
 
-Dal terminale avvia `./arcade`. Serve una finestra di almeno 80×24; il gioco rende meglio da 120×40 in su.
+# 🕹️ PLAYWRIGHT ARCADE
 
-Scegli un settore (progetto), un livello (gruppo di test) e una missione (test) con le frecce; Invio apre il briefing e un altro Invio parte, dopo il conto alla rovescia, nel browser visibile. Ctrl+C chiude tutto.
+**I TUOI TEST E2E SONO BOSS. ABBATTILI.**
 
-## I livelli
+![1 PLAYER](https://img.shields.io/badge/PLAYER-1-ff46be?style=for-the-badge)
+![macOS](https://img.shields.io/badge/CABINATO-macOS-46e1ff?style=for-the-badge)
+![Python](https://img.shields.io/badge/CPU-Python_3.9+-ffd650?style=for-the-badge)
+![Terminale](https://img.shields.io/badge/SCHERMO-terminale-5aff8c?style=for-the-badge)
 
-Ogni progetto è diviso in livelli: i file di spec oppure, per i runner a nodi, i gruppi degli id (`accesso.T01_login` sta nel livello `accesso`). La barra mostra quante missioni hai superato l'ultima volta.
+`>> PREMI INVIO PER INIZIARE <<`
 
-Se il progetto dichiara un rapporto su disco, entrando il gioco legge l'ultimo, così contano pure le partite fatte fuori da arcade.
+</div>
 
-Dentro un livello la prima riga, **TUTTO IL LIVELLO**, lancia l'intero gruppo; le righe `>>` lanciano un sotto-gruppo; le altre una missione singola. Dalla lista dei livelli, Spazio va dritto al briefing del livello intero.
+Un launcher di test Playwright a forma di sparatutto da terminale. Grafica a pixel, musica sintetizzata e un boss per ogni test: quello che vedi e senti viene dagli esiti veri del runner.
 
-Un livello parte come un'unica esecuzione del runner. I test che non appartengono a un gruppo sono nel livello SPECIALI.
+## 🪙 Inserisci il gettone
 
-## La battaglia
+```bash
+git clone https://github.com/dambrosini92/playwright-arcade.git
+```
 
-Mentre il test gira sei in uno sparatutto. Ogni fase del test è un boss; le righe dei reporter guidano il gioco:
+```bash
+cd playwright-arcade
+```
 
-- **Test superato**: il boss esplode tra fuochi d'artificio e coriandoli, suona un arpeggio gioioso che sale con la combo e l'arma si potenzia.
-- **Test fallito**: il boss ti colpisce, lo schermo trema, la scena perde colore sotto la pioggia, parte il lamento triste e appare il messaggio d'errore.
-- **Test saltato**: il boss se ne va, con un breve avviso.
+```bash
+/usr/bin/python3 -m pip install --user numpy
+```
 
-Punteggio e rango sono solo gioco: il verdetto finale viene dal codice di uscita del test e dai suoi esiti, mai da come hai giocato. Il boss muore solo se il test passa.
+```bash
+./arcade --demo
+```
 
-Tasti in battaglia: frecce per muovere la nave (se non tocchi nulla guida il pilota automatico), Spazio bomba, Tab log completo, M audio, Esc ferma il test. A fine partita: Invio torna alle missioni, R riprova, Tab rilegge il log, Esc torna ai settori.
+La demo non tocca nessun progetto: è una suite finta con vittorie, errori, crash e test velocissimi. Serve una finestra di almeno 80×24, ma il gioco rende meglio da 120×40 in su.
 
-La musica accompagna anche il test; M la toglie e la scelta viene ricordata. Record, livello ed esiti per test stanno in `save.json`: cancellalo per ripartire da zero.
+## 🗺️ Scegli il livello
 
-Se non senti nulla: `./arcade --audio-test` fa suonare il motore vero; un guasto appare in basso a destra e il motivo finisce in `audio.log`.
+<img src="docs/missions.png" alt="Lista delle missioni di un livello, con il boss in anteprima" width="720">
 
-Per provare il gioco senza toccare alcun progetto: `./arcade --demo` aggiunge il settore DEMO, che è anche l'unico quando non hai configurato progetti, con una suite finta che copre vittorie, errori, crash e test velocissimi.
+| Schermata | Cos'è |
+|---|---|
+| **SETTORI** | I tuoi progetti, ognuno con il suo pianeta |
+| **LIVELLI** | I file di spec oppure, per i runner a nodi, i gruppi di id: `accesso.T01_login` sta nel livello `accesso` |
+| **MISSIONI** | I singoli test |
 
-## I progetti
+- **TUTTO IL LIVELLO** lancia l'intero gruppo.
+- Le righe `>>` lanciano un sotto-gruppo, le altre una missione singola.
+- Dalla lista dei livelli, Spazio va dritto al briefing del livello intero.
+- I test senza gruppo finiscono nel livello SPECIALI.
+
+Invio apre il briefing, un altro Invio fa partire il conto alla rovescia e il test, nel browser visibile. Se il progetto lascia un rapporto su disco, contano anche le partite giocate fuori da arcade.
+
+## 👾 Boss fight
+
+| | Esito | Cosa succede |
+|---|---|---|
+| <img src="docs/pass.png" alt="Banner SUPERATO! con coriandoli" width="340"> | **SUPERATO!** | Il boss esplode tra fuochi d'artificio e coriandoli, l'arpeggio sale con la combo e l'arma si potenzia |
+| <img src="docs/fail.png" alt="Banner FALLITO rosso con il messaggio di errore" width="340"> | **FALLITO** | Il boss ti colpisce, lo schermo trema, la scena perde colore sotto la pioggia e appare il messaggio d'errore |
+| | **SALTATO** | Il boss se ne va, con un breve avviso |
+
+> **REGOLA DELLA SALA:** punteggio e rango sono solo gioco. Il verdetto viene dal codice di uscita e dagli esiti del test, mai da come hai giocato. Il boss muore solo se il test passa.
+
+## 🎮 Comandi
+
+| Tasto | In battaglia | A fine partita |
+|---|---|---|
+| Frecce | Muovi la nave (se non tocchi nulla, guida il pilota automatico) | |
+| `Spazio` | Bomba | |
+| `Tab` | Log completo | Rilegge il log |
+| `M` | Audio sì/no, e la scelta viene ricordata | |
+| `Esc` | Ferma il test | Torna ai settori |
+| `Invio` | | Torna alle missioni |
+| `R` | | Riprova |
+| `Ctrl+C` | Chiude tutto | Chiude tutto |
+
+## 🏆 Hi-score
+
+<img src="docs/result.png" alt="Schermata di game over con punteggio, rango e test da guardare" width="720">
+
+Record, livello ed esiti per test stanno in `save.json`: cancellalo per ripartire da zero.
+
+## 🌍 Aggiungi i tuoi mondi
 
 I tuoi progetti stanno in `local/projects.py`, che git ignora. Parti dall'esempio:
 
@@ -42,17 +91,35 @@ I tuoi progetti stanno in `local/projects.py`, che git ignora. Parti dall'esempi
 mkdir -p local && cp projects.example.py local/projects.py
 ```
 
-Basta `PROJECTS` per una suite Playwright standard: il gioco cerca `playwright.config.*` e la lancia. Le altre voci dell'esempio sono facoltative e servono per runner propri, rapporti su disco, tunnel o avvisi nel briefing. Per un formato di output nuovo, modifica `parse_line` in `game.py`.
+Per una suite Playwright standard basta `PROJECTS`: il gioco cerca `playwright.config.*` e la lancia. Le altre voci dell'esempio sono facoltative e servono per runner propri, rapporti su disco, tunnel o avvisi nel briefing. Per un formato di output nuovo, modifica `parse_line` in `game.py`.
 
-Per leggere l'elenco senza avviare nulla: `./arcade --list NOME`.
+Per leggere l'elenco senza avviare nulla:
 
-## Com'è fatto
+```bash
+./arcade --list NOME
+```
 
-- `core.py`: scoperta dei test e comandi.
-- `game.py`: scene, battaglia e lettura delle righe dei reporter (`parse_line`).
-- `gfx.py`: grafica a pixel nel terminale, a 24 bit oppure 256 colori (`ARCADE_COLOR=256` per forzarli).
-- `audio_engine.py`: mixer in tempo reale su CoreAudio, in un processo a parte.
-- `tools/make_audio.py`: sintetizza musica ed effetti in `assets/`.
-- `projects.example.py`: modello per `local/projects.py`.
+## 🔊 Non senti nulla?
 
-Richiede numpy per `/usr/bin/python3`.
+```bash
+./arcade --audio-test
+```
+
+Fa suonare il motore vero. Un guasto appare in basso a destra e il motivo finisce in `audio.log`.
+
+## 🔧 Dentro il cabinato
+
+| File | Cosa fa |
+|---|---|
+| `core.py` | Scoperta dei test e comandi |
+| `game.py` | Scene, battaglia e lettura delle righe dei reporter |
+| `gfx.py` | Grafica a pixel nel terminale, a 24 bit oppure 256 colori (`ARCADE_COLOR=256` per forzarli) |
+| `audio_engine.py` | Mixer in tempo reale su CoreAudio, in un processo a parte |
+| `tools/make_audio.py` | Sintetizza musica ed effetti in `assets/` |
+| `projects.example.py` | Modello per `local/projects.py` |
+
+<div align="center">
+
+`GAME OVER? PREMI R PER RIPROVARE`
+
+</div>
