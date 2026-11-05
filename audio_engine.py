@@ -139,13 +139,22 @@ def read_commands(mixer):
 
 
 def portable():
-    import sounddevice as sd
+    try:
+        import sounddevice as sd
+    except (ImportError, OSError) as e:  # OSError: manca la libreria PortAudio
+        sys.exit('Audio non disponibile: %s\nInstalla le dipendenze con: %s -m pip install -r requirements.txt\n'
+                 'Su Linux serve anche PortAudio, per esempio: sudo apt install libportaudio2' % (e, sys.executable))
     mixer = Mixer()
 
     def fill(out, _frames, _time, _status):
         out[:] = mixer.mix()
 
-    with sd.OutputStream(samplerate=RATE, blocksize=FRAMES, channels=2, dtype='float32', latency='low', callback=fill):
+    try:
+        stream = sd.OutputStream(samplerate=RATE, blocksize=FRAMES, channels=2, dtype='float32', latency='low',
+                                 callback=fill)
+    except sd.PortAudioError as e:
+        sys.exit('Nessuna uscita audio utilizzabile: %s' % e)
+    with stream:
         read_commands(mixer)
     return 0
 

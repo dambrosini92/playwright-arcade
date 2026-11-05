@@ -1457,7 +1457,7 @@ def audio_test():
         getattr(sound, kind)(name)
         time.sleep(wait)
         if not sound.alive:
-            print('Motore audio caduto: vedi audio.log')
+            print('Motore audio caduto:\n' + (HERE / 'audio.log').read_text(encoding='utf-8', errors='replace').strip())
             return 1
     sound.close()
     print('Motore audio OK. Se non hai sentito nulla, controlla volume e uscita audio del computer.')
